@@ -1,0 +1,23 @@
+server:
+  port: 8080
+
+# spring config
+spring:
+  config:
+    use-legacy-processing: true
+  profiles:
+    # add import modules profile
+    include:
+
+  datasource:
+    jdbc-url: ${DB_HOSTNAME}/api?allowPublicKeyRetrieval=true&rewriteBatchedStatements=true
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
