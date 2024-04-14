@@ -2,8 +2,8 @@ package com.walking.api.config;
 
 import static com.walking.api.config.ApiDataSourceConfig.DATASOURCE_NAME;
 
-import com.walking.data.DataConfig;
-import com.walking.data.config.HibernatePropertyMapProvider;
+import com.walking.api.data.DataConfig;
+import com.walking.api.data.config.HibernatePropertyMapProvider;
 import javax.sql.DataSource;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.cfg.AvailableSettings;
