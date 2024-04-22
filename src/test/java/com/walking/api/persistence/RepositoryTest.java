@@ -5,10 +5,12 @@ import com.walking.api.config.ApiDataSourceConfig;
 import com.walking.api.config.ApiEntityConfig;
 import com.walking.api.config.ApiJpaConfig;
 import com.walking.api.config.DataJpaConfig;
-import com.walking.api.data.entity.IndexedLatLng;
 import com.walking.api.data.entity.IndexedPointEntity;
+import com.walking.api.data.entity.IndexedLatLng;
 import com.walking.api.data.entity.NonIndexedLatLng;
 import com.walking.api.data.entity.NonIndexedPointEntity;
+import java.lang.Double;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.persistence.EntityManager;
@@ -31,6 +33,7 @@ import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.geom.Polygon;
 import org.locationtech.jts.geom.PrecisionModel;
 import org.locationtech.jts.util.Stopwatch;
+import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration;
@@ -38,6 +41,8 @@ import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfigurat
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase.Replace;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
@@ -61,13 +66,25 @@ import org.springframework.test.context.TestPropertySource;
 			ObjectMapper.class
 		})
 @DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
-class RepositoryTest {
+class RepositoryTest implements ApplicationContextAware {
 
 	@Autowired EntityManager em;
 
-	//	영통역6번출구.영덕고등학교
 	static double LAT = 37.2521333;
 	static double LNG = 127.0698333;
+
+	static int query_idx;
+
+	@Override
+	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+		String[] activeProfiles = applicationContext.getEnvironment().getActiveProfiles();
+		List<String> profiles = Arrays.asList(activeProfiles);
+		if (profiles.contains("mysql-local")) {
+			query_idx = 0;
+		} else if (profiles.contains("postgresql-local")) {
+			query_idx = 1;
+		}
+	}
 
 	void stopWatchLog(Long stopwatch) {
 		log.info("*************************************");
@@ -80,7 +97,6 @@ class RepositoryTest {
 		log.info("Query Time : " + stopwatch + "ms");
 		log.info("*************************************");
 	}
-
 	void sizeLog(int size) {
 		log.info("*************************************");
 		log.info("Size : " + size);
@@ -160,7 +176,9 @@ class RepositoryTest {
 			query.setParameter("location", location2);
 			IndexedPointEntity p2 = query.getResultList().get(0);
 			String mysql_query = "SELECT ST_DISTANCE_SPHERE(:point1, :point2)";
-			String s_query = mysql_query;
+			String postgres_query = "SELECT ST_DISTANCESPHERE(:point1, :point2)";
+			String[] queries = {mysql_query, postgres_query};
+			String s_query = queries[query_idx];
 
 			// When
 			double lat1 = p1.getPointValue().getY();
@@ -248,7 +266,7 @@ class RepositoryTest {
 						new Coordinate(LNG + double_difference, LAT - double_difference),
 					};
 			Polygon square = geometryFactory.createPolygon(vertexes);
-			Geometry geometry = point.buffer(double_difference.doubleValue(), 2);
+			Geometry geometry = point.buffer(double_difference, 2);
 			String mysql_query =
 					"SELECT * FROM point_tb WHERE ST_CONTAINS(:square, point_value) AND ST_CONTAINS(:buffered, point_value)";
 			String query = mysql_query;
@@ -385,7 +403,9 @@ class RepositoryTest {
 			query.setParameter("location", location2);
 			NonIndexedPointEntity p2 = query.getResultList().get(0);
 			String mysql_query = "SELECT ST_DISTANCE_SPHERE(:point1, :point2)";
-			String s_query = mysql_query;
+			String postgres_query = "SELECT ST_DISTANCESPHERE(:point1, :point2)";
+			String[] queries = {mysql_query, postgres_query};
+			String s_query = queries[query_idx];
 
 			// When
 			double lat1 = p1.getPointValue().getY();
@@ -524,7 +544,10 @@ class RepositoryTest {
 			Polygon square = geometryFactory.createPolygon(vertexes);
 			String mysql_query =
 					"SELECT * FROM non_idx_point_tb WHERE ST_CONTAINS(:square, point_value) AND ST_DISTANCE_SPHERE(:point, point_value) <= :distance";
-			String query = mysql_query;
+			String postgres_query =
+					"SELECT * FROM non_idx_point_tb WHERE ST_CONTAINS(:square, point_value) AND ST_DISTANCESPHERE(:point, point_value) <= :distance";
+			String[] queries = {mysql_query, postgres_query};
+			String query = queries[query_idx];
 
 			// When
 			Stopwatch stopwatch = new Stopwatch();
