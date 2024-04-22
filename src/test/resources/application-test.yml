@@ -4,6 +4,7 @@ spring:
   profiles:
     include:
       - mysql-local
+#      - postgresql-local
 
 logging:
   level:
