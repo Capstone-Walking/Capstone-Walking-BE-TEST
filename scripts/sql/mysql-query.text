@@ -1,0 +1,60 @@
+SET @point = ST_SRID(point(127.0698333,  37.2521333), 4326);
+SET @square =
+        ST_GEOMFROMTEXT(
+                'POLYGON (( 37.249438399999995 127.0725282,  37.2548282 127.0725282,  37.2548282 127.0671384,  37.249438399999995 127.0671384,  37.249438399999995 127.0725282))',
+                4326);
+SET @round =
+        ST_GEOMFROMTEXT(
+                'POLYGON (( 37.2521333 127.0725282,  37.250227717935374 127.07173888206462,  37.249438399999995 127.0698333,  37.250227717935374 127.06792771793538,  37.2521333 127.0671384,  37.25403888206462 127.06792771793538,  37.2548282 127.0698333,  37.25403888206462 127.07173888206462,  37.2521333 127.0725282))',
+                4326);
+
+# 포인트객체로 위치를 조회합니다
+EXPLAIN ANALYZE
+SELECT *
+FROM api.point_tb AS pe
+WHERE pe.point_value = @point;
+
+
+# 포인트버퍼객체로 일정 거리 이내의 위치를 조회합니다
+EXPLAIN ANALYZE
+SELECT *
+FROM api.point_tb AS pe
+WHERE ST_CONTAINS(@round, pe.point_value);
+
+# 사각형을 만들어 필터링 후 버퍼객체를 활용하여 일정 거리 이내의 위치를 조회합니다
+EXPLAIN ANALYZE
+SELECT *
+FROM point_tb
+WHERE ST_CONTAINS(@square, point_value)
+  AND ST_CONTAINS(@round, point_value);
+
+
+# 사각형을 만들어 필터링 후 ST_DISTANCE_SPHERE를 활용하여 일정 거리 이내의 위치를 조회합니다
+EXPLAIN ANALYZE
+SELECT *
+FROM point_tb
+WHERE ST_CONTAINS(@square, point_value)
+  AND ST_DISTANCE_SPHERE(@point, point_value) <= 500;
+
+SET @lat = 37.2521333;
+SET @lng = 127.0698333;
+
+# Lat, Lng로 위치를 조회합니다.
+EXPLAIN ANALYZE
+SELECT * FROM lat_lng_tb ll WHERE ll.lat_value=@lat AND ll.lng_value=@lng;
+
+# Lat, Lng로 일정 거리 이내의 위치를 계산 후 조회합니다.
+EXPLAIN ANALYZE
+SELECT *
+FROM lat_lng_tb ll
+WHERE (6371 * acos(cos(radians(@lat)) * cos(radians(ll.lat_value)) * cos(radians(ll.lng_value) - radians(@lng)) +
+                   sin(radians(@lat)) * sin(radians(ll.lat_value)))) * 1000 <= 500;
+
+# Lat, Lng로 필터링한 값을 테이블로 만들어 조인하고 일정 거리 이내의 위치를 계산 후 조회합니다.
+EXPLAIN ANALYZE
+SELECT *
+FROM lat_lng_tb ll
+JOIN (SELECT id FROM lat_lng_tb ll WHERE ll.lat_value=@lat AND ll.lng_value=@lng) ill
+ON ll.id = ill.id
+WHERE (6371 * acos(cos(radians(@lat)) * cos(radians(ll.lat_value)) * cos(radians(ll.lng_value) - radians(@lng)) +
+                   sin(radians(@lat)) * sin(radians(ll.lat_value)))) * 1000 <= 500;
