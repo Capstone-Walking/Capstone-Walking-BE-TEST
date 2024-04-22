@@ -3,4 +3,5 @@ spring:
     use-legacy-processing: true
   profiles:
     include:
-      - mysql-local
+#      - mysql-local
+      - postgresql-local
