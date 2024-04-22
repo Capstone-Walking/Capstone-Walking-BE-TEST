@@ -12,6 +12,21 @@ services:
       - "13306:3306"
     volumes:
       - ./mysql-init.d:/docker-entrypoint-initdb.d
+      - ../data:/var/lib/mysql-files
+
+  walking-postgresql:
+    container_name: walking-postgres
+    image: postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=root
+      - POSTGRES_DB=api
+      - TZ=Asia/Seoul
+    volumes:
+      - ../data:/var/lib/postgresql-files
+    ports:
+      - "15432:5432"
 
   walking-adminer: # mysql web admin
     container_name: walking-adminer
