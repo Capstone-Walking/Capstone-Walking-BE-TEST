@@ -3,4 +3,9 @@ spring:
     use-legacy-processing: true
   profiles:
     include:
-      - local
+      - mysql-local
+
+logging:
+  level:
+    root: off
+    com.walking.api.persistence: debug
