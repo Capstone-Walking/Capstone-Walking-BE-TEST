@@ -1,0 +1,21 @@
+-- lat_lng_tb 테이블에 데이터 로드
+COPY api.public.lat_lng_tb(name, lat_value, lng_value)
+FROM '/var/lib/postgresql-files/data.csv'
+DELIMITER ','
+CSV;
+
+-- non_idx_lat_lng_tb 테이블에 데이터 로드
+COPY api.public.non_idx_lat_lng_tb(name, lat_value, lng_value)
+FROM '/var/lib/postgresql-files/data.csv'
+DELIMITER ','
+CSV;
+
+-- point_tb 테이블 생성
+INSERT INTO api.public.point_tb(name, point_value)
+SELECT name, ST_SetSRID(ST_MakePoint(lng_value, lat_value), 4326)
+FROM api.public.lat_lng_tb;
+
+-- non_idx_point_tb 테이블 생성
+INSERT INTO api.public.non_idx_point_tb(name, point_value)
+SELECT name, ST_SetSRID(ST_MakePoint(lng_value, lat_value), 4326)
+FROM api.public.non_idx_lat_lng_tb;

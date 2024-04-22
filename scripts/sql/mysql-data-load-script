@@ -1,0 +1,33 @@
+# lat_lng_tb 생성
+LOAD DATA INFILE '/var/lib/mysql-files/data.csv' INTO TABLE api.lat_lng_tb
+ FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n' IGNORE 1 ROWS (@var1, @var2, @var3)
+SET
+name = @var1,
+lat_value = @var2, lng_value = @var3;
+
+# non_idx_lat_lng_tb 생성
+LOAD DATA INFILE '/var/lib/mysql-files/data.csv' INTO TABLE api.non_idx_lat_lng_tb
+ FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n' IGNORE 1 ROWS (@var1, @var2, @var3)
+SET
+name = @var1,
+lat_value = @var2, lng_value = @var3;
+
+# point_tb 생성
+LOAD DATA INFILE '/var/lib/mysql-files/data.csv'
+INTO TABLE api.point_tb
+FIELDS TERMINATED BY ','
+LINES TERMINATED BY '\n'
+IGNORE 1 ROWS
+(@var1, @var2, @var3)
+SET  name = @var1,
+point_value = ST_GeomFromText(CONCAT('POINT(', @var2, ' ', @var3, ')'), 4326);
+
+# non_idx_point_tb 생성
+LOAD DATA INFILE '/var/lib/mysql-files/data.csv'
+INTO TABLE api.non_idx_point_tb
+FIELDS TERMINATED BY ','
+LINES TERMINATED BY '\n'
+IGNORE 1 ROWS
+(@var1, @var2, @var3)
+SET  name = @var1,
+point_value = ST_GeomFromText(CONCAT('POINT(', @var2, ' ', @var3, ')'), 4326);
