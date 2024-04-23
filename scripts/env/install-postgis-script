@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# "postgres" 이미지 이름을 가진 Docker 컨테이너의 ID 추출
+postgres_container_id=$(docker ps --filter "ancestor=postgres" -q)
+
+# 결과 출력
+echo $postgres_container_id
+
+docker exec -it $postgres_container_id apt-get update
+docker exec -it $postgres_container_id apt-get install -y postgis
+
+docker exec -it $postgres_container_id psql -U root -d api -c "CREATE EXTENSION postgis;"

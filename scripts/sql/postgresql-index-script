@@ -1,0 +1,2 @@
+DROP INDEX  public.idx_point_tb_point_value;
+CREATE INDEX idx_point_tb_point_value ON api.public.point_tb USING spgist (point_value);

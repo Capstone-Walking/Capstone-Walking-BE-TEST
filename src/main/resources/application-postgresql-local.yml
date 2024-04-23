@@ -1,0 +1,36 @@
+server:
+  port: 8080
+
+# spring config
+spring:
+  config:
+    use-legacy-processing: true
+  profiles:
+    # add import modules profile
+    include:
+
+  # postgres config
+  datasource:
+    jdbc-url: jdbc:postgresql://localhost:15432/api
+    username: root
+    password: root
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.spatial.dialect.postgis.PostgisDialect
+
+# logging config
+logging:
+  level:
+    org:
+      hibernate:
+        SQL: DEBUG
+        type:
+          descriptor:
+            sql:
+              BasicBinder: TRACE

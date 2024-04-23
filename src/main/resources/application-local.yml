@@ -1,34 +1,7 @@
-server:
-  port: 8080
-
-# spring config
 spring:
   config:
     use-legacy-processing: true
   profiles:
-    # add import modules profile
     include:
-
-  datasource:
-    jdbc-url: jdbc:mysql://localhost:13306/api?allowPublicKeyRetrieval=true&rewriteBatchedStatements=true
-    username: root
-    password: root
-    driver-class-name: com.mysql.cj.jdbc.Driver
-
-  jpa:
-    hibernate:
-      ddl-auto: update
-    properties:
-      hibernate:
-        format_sql: true
-
-# logging config
-logging:
-  level:
-    org:
-      hibernate:
-        SQL: DEBUG
-        type:
-          descriptor:
-            sql:
-              BasicBinder: TRACE
+#      - mysql-local
+      - postgresql-local
