@@ -39,8 +39,8 @@ public class IndexedPointEntity {
 	@Column(name = "name", nullable = false)
 	private String name;
 
-	@Column(name = "point_value", columnDefinition = "POINT SRID 4326", nullable = false)
-	//	@Column(name = "point_value", nullable = false)
+	//	@Column(name = "point_value", columnDefinition = "POINT SRID 4326", nullable = false)
+	@Column(name = "point_value", nullable = false)
 	private Point pointValue;
 
 	@Override
