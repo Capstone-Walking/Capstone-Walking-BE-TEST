@@ -9,7 +9,9 @@ import com.walking.api.data.entity.IndexedPointEntity;
 import com.walking.api.data.entity.IndexedLatLng;
 import com.walking.api.data.entity.NonIndexedLatLng;
 import com.walking.api.data.entity.NonIndexedPointEntity;
-import java.lang.Double;
+import com.walking.api.persistence.support.DistanceCalculateSupporter;
+import com.walking.api.persistence.support.LogSupporter;
+import com.walking.api.persistence.support.TestData;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -63,15 +65,21 @@ import org.springframework.test.context.TestPropertySource;
 			ApiEntityConfig.class,
 			ApiJpaConfig.class,
 			DataJpaConfig.class,
-			ObjectMapper.class
+			ObjectMapper.class,
+			LogSupporter.class,
+			DistanceCalculateSupporter.class
 		})
 @DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
 class RepositoryTest implements ApplicationContextAware {
 
 	@Autowired EntityManager em;
 
-	static double LAT = 37.2521333;
-	static double LNG = 127.0698333;
+	@Autowired LogSupporter logSupporter;
+
+	@Autowired DistanceCalculateSupporter distanceCalculateSupporter;
+
+	static double LAT = TestData.ONE.getLat();
+	static double LNG = TestData.ONE.getLng();
 
 	static int query_idx;
 
@@ -84,44 +92,6 @@ class RepositoryTest implements ApplicationContextAware {
 		} else if (profiles.contains("postgresql-local")) {
 			query_idx = 1;
 		}
-	}
-
-	void stopWatchLog(Long stopwatch) {
-		log.info("*************************************");
-		log.info("Elapsed Time : " + stopwatch + "ms");
-		log.info("*************************************");
-	}
-
-	void queryTimeLog(Long stopwatch) {
-		log.info("*************************************");
-		log.info("Query Time : " + stopwatch + "ms");
-		log.info("*************************************");
-	}
-	void sizeLog(int size) {
-		log.info("*************************************");
-		log.info("Size : " + size);
-		log.info("*************************************");
-	}
-
-	void sizeLog(long size) {
-		log.info("*************************************");
-		log.info("Size : " + size);
-		log.info("*************************************");
-	}
-
-	public double calculateHaversineDistance(double lat1, double lng1, double lat2, double lng2) {
-		final int R = 6371;
-		double latDistance = Math.toRadians(lat2 - lat1);
-		double lngDistance = Math.toRadians(lng2 - lng1);
-		double a =
-				Math.sin(latDistance / 2) * Math.sin(latDistance / 2)
-						+ Math.cos(Math.toRadians(lat1))
-								* Math.cos(Math.toRadians(lat2))
-								* Math.sin(lngDistance / 2)
-								* Math.sin(lngDistance / 2);
-
-		double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-		return R * c * 1000;
 	}
 
 	@Nested
@@ -161,7 +131,7 @@ class RepositoryTest implements ApplicationContextAware {
 			log.info(pointEntity.toString());
 			Assertions.assertEquals(LNG, pointEntity.getPointValue().getX());
 			Assertions.assertEquals(LAT, pointEntity.getPointValue().getY());
-			queryTimeLog(queryTime);
+			logSupporter.queryTimeLog(queryTime);
 		}
 
 		@ParameterizedTest(name = "{0}와 {1}의 거리는 {2}m 이내여야 합니다.")
@@ -185,7 +155,8 @@ class RepositoryTest implements ApplicationContextAware {
 			double lng1 = p1.getPointValue().getX();
 			double lat2 = p2.getPointValue().getY();
 			double lng2 = p2.getPointValue().getX();
-			double haversineDistance = calculateHaversineDistance(lat1, lng1, lat2, lng2);
+			double haversineDistance =
+					distanceCalculateSupporter.haversineDistance(lat1, lng1, lat2, lng2);
 
 			Point point1 = p1.getPointValue();
 			Point point2 = p2.getPointValue();
@@ -240,14 +211,14 @@ class RepositoryTest implements ApplicationContextAware {
 			for (IndexedPointEntity pointEntity : allPoints) {
 
 				double haversineDistance =
-						calculateHaversineDistance(
+						distanceCalculateSupporter.haversineDistance(
 								LAT, LNG, pointEntity.getPointValue().getY(), pointEntity.getPointValue().getX());
 				Assertions.assertTrue(haversineDistance <= p_distance);
 			}
-			queryTimeLog(queryTime);
-			stopWatchLog(endTime);
-			sizeLog(allPoints.size());
-			sizeLog(allPoints.stream().distinct().count());
+			logSupporter.queryTimeLog(queryTime);
+			logSupporter.stopWatchLog(endTime);
+			logSupporter.sizeLog(allPoints.size());
+			logSupporter.sizeLog(allPoints.stream().distinct().count());
 		}
 
 		@ParameterizedTest(name = "거리: {0}m")
@@ -288,14 +259,14 @@ class RepositoryTest implements ApplicationContextAware {
 			for (IndexedPointEntity pointEntity : allPoints) {
 
 				double haversineDistance =
-						calculateHaversineDistance(
+						distanceCalculateSupporter.haversineDistance(
 								LAT, LNG, pointEntity.getPointValue().getY(), pointEntity.getPointValue().getX());
 				Assertions.assertTrue(haversineDistance <= p_distance);
 			}
-			queryTimeLog(queryTime);
-			stopWatchLog(endTime);
-			sizeLog(allPoints.size());
-			sizeLog(allPoints.stream().distinct().count());
+			logSupporter.queryTimeLog(queryTime);
+			logSupporter.stopWatchLog(endTime);
+			logSupporter.sizeLog(allPoints.size());
+			logSupporter.sizeLog(allPoints.stream().distinct().count());
 		}
 
 		@ParameterizedTest(name = "거리: {0}m")
@@ -337,15 +308,15 @@ class RepositoryTest implements ApplicationContextAware {
 			for (IndexedPointEntity pointEntity : allPoints) {
 
 				double haversineDistance =
-						calculateHaversineDistance(
+						distanceCalculateSupporter.haversineDistance(
 								LAT, LNG, pointEntity.getPointValue().getY(), pointEntity.getPointValue().getX());
 
 				Assertions.assertTrue(haversineDistance <= p_distance);
 			}
-			queryTimeLog(queryTime);
-			stopWatchLog(endTime);
-			sizeLog(allPoints.size());
-			sizeLog(allPoints.stream().distinct().count());
+			logSupporter.queryTimeLog(queryTime);
+			logSupporter.stopWatchLog(endTime);
+			logSupporter.sizeLog(allPoints.size());
+			logSupporter.sizeLog(allPoints.stream().distinct().count());
 		}
 	}
 
@@ -387,7 +358,7 @@ class RepositoryTest implements ApplicationContextAware {
 			log.info(pointEntity.toString());
 			Assertions.assertEquals(LNG, pointEntity.getPointValue().getX());
 			Assertions.assertEquals(LAT, pointEntity.getPointValue().getY());
-			queryTimeLog(queryTime);
+			logSupporter.queryTimeLog(queryTime);
 		}
 
 		@ParameterizedTest(name = "{0}와 {1}의 거리는 {2}m 이내여야 합니다.")
@@ -412,7 +383,8 @@ class RepositoryTest implements ApplicationContextAware {
 			double lng1 = p1.getPointValue().getX();
 			double lat2 = p2.getPointValue().getY();
 			double lng2 = p2.getPointValue().getX();
-			double haversineDistance = calculateHaversineDistance(lat1, lng1, lat2, lng2);
+			double haversineDistance =
+					distanceCalculateSupporter.haversineDistance(lat1, lng1, lat2, lng2);
 
 			Point point1 = p1.getPointValue();
 			Point point2 = p2.getPointValue();
@@ -468,14 +440,14 @@ class RepositoryTest implements ApplicationContextAware {
 			for (NonIndexedPointEntity pointEntity : allPoints) {
 
 				double haversineDistance =
-						calculateHaversineDistance(
+						distanceCalculateSupporter.haversineDistance(
 								LAT, LNG, pointEntity.getPointValue().getY(), pointEntity.getPointValue().getX());
 				Assertions.assertTrue(haversineDistance <= p_distance);
 			}
-			queryTimeLog(queryTime);
-			stopWatchLog(endTime);
-			sizeLog(allPoints.size());
-			sizeLog(allPoints.stream().distinct().count());
+			logSupporter.queryTimeLog(queryTime);
+			logSupporter.stopWatchLog(endTime);
+			logSupporter.sizeLog(allPoints.size());
+			logSupporter.sizeLog(allPoints.stream().distinct().count());
 		}
 
 		@ParameterizedTest(name = "거리: {0}m")
@@ -516,14 +488,14 @@ class RepositoryTest implements ApplicationContextAware {
 			for (NonIndexedPointEntity pointEntity : allPoints) {
 
 				double haversineDistance =
-						calculateHaversineDistance(
+						distanceCalculateSupporter.haversineDistance(
 								LAT, LNG, pointEntity.getPointValue().getY(), pointEntity.getPointValue().getX());
 				Assertions.assertTrue(haversineDistance <= p_distance);
 			}
-			queryTimeLog(queryTime);
-			stopWatchLog(endTime);
-			sizeLog(allPoints.size());
-			sizeLog(allPoints.stream().distinct().count());
+			logSupporter.queryTimeLog(queryTime);
+			logSupporter.stopWatchLog(endTime);
+			logSupporter.sizeLog(allPoints.size());
+			logSupporter.sizeLog(allPoints.stream().distinct().count());
 		}
 
 		@ParameterizedTest(name = "거리: {0}m")
@@ -568,15 +540,15 @@ class RepositoryTest implements ApplicationContextAware {
 			for (NonIndexedPointEntity pointEntity : allPoints) {
 
 				double haversineDistance =
-						calculateHaversineDistance(
+						distanceCalculateSupporter.haversineDistance(
 								LAT, LNG, pointEntity.getPointValue().getY(), pointEntity.getPointValue().getX());
 
 				Assertions.assertTrue(haversineDistance <= p_distance);
 			}
-			queryTimeLog(queryTime);
-			stopWatchLog(endTime);
-			sizeLog(allPoints.size());
-			sizeLog(allPoints.stream().distinct().count());
+			logSupporter.queryTimeLog(queryTime);
+			logSupporter.stopWatchLog(endTime);
+			logSupporter.sizeLog(allPoints.size());
+			logSupporter.sizeLog(allPoints.stream().distinct().count());
 		}
 	}
 
@@ -619,7 +591,7 @@ class RepositoryTest implements ApplicationContextAware {
 			Assertions.assertEquals(lng, latLng.getLng());
 			Assertions.assertEquals(lat, latLng.getLat());
 			log.info(latLng.toString());
-			queryTimeLog(queryTime);
+			logSupporter.queryTimeLog(queryTime);
 		}
 
 		@ParameterizedTest(name = "{0}와 {1}의 거리는 {2}m 이내여야 합니다.")
@@ -679,13 +651,15 @@ class RepositoryTest implements ApplicationContextAware {
 
 			// Then
 			for (IndexedLatLng latLng : all) {
-				double distance = calculateHaversineDistance(LAT, LNG, latLng.getLat(), latLng.getLng());
+				double distance =
+						distanceCalculateSupporter.haversineDistance(
+								LAT, LNG, latLng.getLat().doubleValue(), latLng.getLng().doubleValue());
 				Assertions.assertTrue(distance <= p_distance);
 			}
-			queryTimeLog(queryTime);
-			stopWatchLog(endTime);
-			sizeLog(all.size());
-			sizeLog(all.stream().distinct().count());
+			logSupporter.queryTimeLog(queryTime);
+			logSupporter.stopWatchLog(endTime);
+			logSupporter.sizeLog(all.size());
+			logSupporter.sizeLog(all.stream().distinct().count());
 		}
 
 		@ParameterizedTest(name = "거리: {0}m")
@@ -722,13 +696,15 @@ class RepositoryTest implements ApplicationContextAware {
 
 			// Then
 			for (IndexedLatLng latLng : all) {
-				double distance = calculateHaversineDistance(LAT, LNG, latLng.getLat(), latLng.getLng());
+				double distance =
+						distanceCalculateSupporter.haversineDistance(
+								LAT, LNG, latLng.getLat().doubleValue(), latLng.getLng().doubleValue());
 				Assertions.assertTrue(distance <= p_distance);
 			}
-			queryTimeLog(queryTime);
-			stopWatchLog(endTime);
-			sizeLog(all.size());
-			sizeLog(all.stream().distinct().count());
+			logSupporter.queryTimeLog(queryTime);
+			logSupporter.stopWatchLog(endTime);
+			logSupporter.sizeLog(all.size());
+			logSupporter.sizeLog(all.stream().distinct().count());
 		}
 	}
 
@@ -772,7 +748,7 @@ class RepositoryTest implements ApplicationContextAware {
 			Assertions.assertEquals(lng, latLng.getLng());
 			Assertions.assertEquals(lat, latLng.getLat());
 			log.info(latLng.toString());
-			queryTimeLog(queryTime);
+			logSupporter.queryTimeLog(queryTime);
 		}
 
 		@ParameterizedTest(name = "거리: {0}")
@@ -801,14 +777,14 @@ class RepositoryTest implements ApplicationContextAware {
 			// Then
 			for (NonIndexedLatLng latLng : all) {
 				double distance =
-						calculateHaversineDistance(
+						distanceCalculateSupporter.haversineDistance(
 								LAT, LNG, latLng.getLat().doubleValue(), latLng.getLng().doubleValue());
 				Assertions.assertTrue(distance <= p_distance);
 			}
-			queryTimeLog(queryTime);
-			stopWatchLog(endTime);
-			sizeLog(all.size());
-			sizeLog(all.stream().distinct().count());
+			logSupporter.queryTimeLog(queryTime);
+			logSupporter.stopWatchLog(endTime);
+			logSupporter.sizeLog(all.size());
+			logSupporter.sizeLog(all.stream().distinct().count());
 		}
 
 		@ParameterizedTest(name = "거리: {0}m")
@@ -845,13 +821,15 @@ class RepositoryTest implements ApplicationContextAware {
 
 			// Then
 			for (NonIndexedLatLng latLng : all) {
-				double distance = calculateHaversineDistance(LAT, LNG, latLng.getLat(), latLng.getLng());
+				double distance =
+						distanceCalculateSupporter.haversineDistance(
+								LAT, LNG, latLng.getLat().doubleValue(), latLng.getLng().doubleValue());
 				Assertions.assertTrue(distance <= p_distance);
 			}
-			queryTimeLog(queryTime);
-			stopWatchLog(endTime);
-			sizeLog(all.size());
-			sizeLog(all.stream().distinct().count());
+			logSupporter.queryTimeLog(queryTime);
+			logSupporter.stopWatchLog(endTime);
+			logSupporter.sizeLog(all.size());
+			logSupporter.sizeLog(all.stream().distinct().count());
 		}
 	}
 }
