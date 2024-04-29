@@ -1,0 +1,54 @@
+#item 테이블 생성
+LOAD DATA INFILE '/var/lib/mysql-files/traffic_light_utf8.csv'
+IGNORE
+INTO TABLE api.item
+FIELDS
+    TERMINATED BY ','
+LINES
+    TERMINATED BY '\n'
+IGNORE 1 ROWS
+(id, @dummy, @dummy, lat, lng, address);
+
+#member 테이블 생성
+LOAD DATA INFILE '/var/lib/mysql-files/member_utf8.csv'
+IGNORE
+INTO TABLE api.member
+FIELDS
+    TERMINATED BY ','
+LINES
+    TERMINATED BY '\n'
+IGNORE 1 ROWS
+(id);
+
+#category 테이블 생성
+LOAD DATA INFILE '/var/lib/mysql-files/category_utf8.csv'
+IGNORE
+INTO TABLE api.category
+FIELDS
+    TERMINATED BY ','
+LINES
+    TERMINATED BY '\n'
+IGNORE 1 ROWS
+(id, order_interval, member_id);
+
+#간격을 [1] 로 설정한 즐겨찾기 항목 생성
+LOAD DATA INFILE '/var/lib/mysql-files/favorite_item_with_interval_1.csv'
+IGNORE
+INTO TABLE api.favorite_item_with_interval
+FIELDS
+    TERMINATED BY ','
+LINES
+    TERMINATED BY '\n'
+IGNORE 1 ROWS
+(member_id, category_id, item_id, orders);
+
+#간격을 [1024] 로 설정한 즐겨찾기 항목 생성
+LOAD DATA INFILE '/var/lib/mysql-files/favorite_item_with_interval_1024.csv'
+IGNORE
+INTO TABLE api.favorite_item_with_interval
+FIELDS
+    TERMINATED BY ','
+LINES
+    TERMINATED BY '\n'
+IGNORE 1 ROWS
+(member_id, category_id, item_id, orders);
