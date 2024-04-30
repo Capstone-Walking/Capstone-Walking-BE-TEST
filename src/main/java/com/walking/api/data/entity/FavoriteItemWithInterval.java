@@ -7,17 +7,21 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
+import javax.persistence.Table;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
-@Data
+@Getter
+@Setter
 @Builder(toBuilder = true)
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Table(name = "favorite_item_with_interval")
 public class FavoriteItemWithInterval {
 
 	@Id

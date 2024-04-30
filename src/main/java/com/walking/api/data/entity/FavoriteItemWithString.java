@@ -7,17 +7,19 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
+import javax.persistence.Table;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Data
+@Getter
 @Builder(toBuilder = true)
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Table(name = "favorite_item_with_string")
 public class FavoriteItemWithString {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)

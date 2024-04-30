@@ -4,3 +4,8 @@ spring:
   profiles:
     include:
       - local
+
+logging:
+  level:
+    root: off
+    com.walking.api: debug
