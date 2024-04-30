@@ -21,12 +21,10 @@ import org.springframework.transaction.annotation.Transactional;
 public class ModifyOrderService {
 
 	private final EntityManager em;
-	/*
-	 * workTable
-	 *  변경되고 있는 정보를 저장
-	 *  key: 정렬 순서, value: 정렬될 아이템과 실제 순서 값
-	 */
+
+	/** workTable 변경되고 있는 정보를 저장 key: 정렬 순서, value: 정렬될 아이템과 실제 순서 값 */
 	private List<FavoriteItemWithInterval> workTable = new ArrayList<>();
+
 	private int interval;
 
 	/**
