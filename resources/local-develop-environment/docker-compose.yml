@@ -11,7 +11,24 @@ services:
     ports:
       - "13306:3306"
     volumes:
-      - ./mysql-init.d:/docker-entrypoint-initdb.d
+      - ./mysql-init.d/write/init:/docker-entrypoint-initdb.d
+      - ./mysql-init.d/write/config/config_file.cnf:/etc/my.cnf
+
+  walking-mysql-read:
+    container_name: walking-mysql8-read
+    image: mysql/mysql-server:8.0.27
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_ROOT_HOST=%
+      - TZ=Asia/Seoul
+    command: [ "--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci", "--lower_case_table_names=1", "--max_connections=2048", "--wait_timeout=3600" ]
+    ports:
+      - "23306:3306"
+    links:
+      - walking-mysql
+    volumes:
+      - ./mysql-init.d/read/init:/docker-entrypoint-initdb.d
+      - ./mysql-init.d/read/config/config_file.cnf:/etc/my.cnf
 
   walking-adminer: # mysql web admin
     container_name: walking-adminer
