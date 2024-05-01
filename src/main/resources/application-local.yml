@@ -9,12 +9,6 @@ spring:
     # add import modules profile
     include:
 
-  datasource:
-    jdbc-url: jdbc:mysql://localhost:13306/api?allowPublicKeyRetrieval=true&rewriteBatchedStatements=true
-    username: root
-    password: root
-    driver-class-name: com.mysql.cj.jdbc.Driver
-
   jpa:
     hibernate:
       ddl-auto: update
@@ -25,6 +19,17 @@ spring:
         order_updates: true
         jdbc:
           batch_size: 1000
+  datasource:
+    write:
+      jdbc-url: jdbc:mysql://localhost:13306/api?allowPublicKeyRetrieval=true&rewriteBatchedStatements=true
+      username: root
+      password: root
+      driver-class-name: com.mysql.cj.jdbc.Driver
+    read:
+      jdbc-url: jdbc:mysql://localhost:23306/api?allowPublicKeyRetrieval=true&rewriteBatchedStatements=true
+      username: root
+      password: root
+      driver-class-name: com.mysql.cj.jdbc.Driver
 
 # logging config
 logging:
