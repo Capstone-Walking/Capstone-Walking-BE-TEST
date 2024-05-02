@@ -4,3 +4,17 @@ spring:
   profiles:
     include:
       - local
+
+picture:
+  path: src/test/resources/images
+
+logging:
+  level:
+    root: off
+    com.walking: info
+
+minio:
+  url: http://localhost:9000
+  access-key: thisisroot
+  secret-key: thisisroot
+  bucket-name: picture
