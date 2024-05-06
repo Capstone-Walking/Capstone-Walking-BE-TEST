@@ -1,0 +1,32 @@
+#신호등 데이터 생성
+LOAD DATA INFILE '/var/lib/mysql-files/traffic.csv'
+IGNORE
+INTO TABLE api.traffic
+FIELDS
+    TERMINATED BY ','
+LINES
+    TERMINATED BY '\n'
+IGNORE 1 ROWS
+(id);
+
+#신호등 사이클 정보 데이터 생성
+LOAD DATA INFILE '/var/lib/mysql-files/trafficCycle.csv'
+IGNORE
+INTO TABLE api.traffic_cycle
+FIELDS
+    TERMINATED BY ','
+LINES
+    TERMINATED BY '\n'
+IGNORE 1 ROWS
+(traffic_id, red_cycle, green_cycle);
+
+#신호등 정보 호출 최초 1회 데이터 생성
+LOAD DATA INFILE '/var/lib/mysql-files/firstCall.csv'
+IGNORE
+INTO TABLE api.traffic_api_call
+FIELDS
+    TERMINATED BY ','
+LINES
+    TERMINATED BY '\n'
+IGNORE 1 ROWS
+(traffic_id, color, time_left, execution_number);
