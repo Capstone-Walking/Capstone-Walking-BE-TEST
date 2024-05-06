@@ -4,6 +4,7 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.OneToOne;
 import lombok.AllArgsConstructor;
@@ -19,14 +20,16 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class TrafficCycle {
 
-	@Id @GeneratedValue private Long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
 
 	@OneToOne(fetch = FetchType.LAZY)
 	private Traffic traffic;
 
 	@Column(nullable = false)
-	private Double redDuration;
+	private Double redCycle;
 
 	@Column(nullable = false)
-	private Double greenDuration;
+	private Double greenCycle;
 }
