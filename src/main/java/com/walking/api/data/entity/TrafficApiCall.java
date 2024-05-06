@@ -42,7 +42,7 @@ public class TrafficApiCall {
 
 	// 잔여시간
 	@Column(nullable = false)
-	private Double timeLeft;
+	private Float timeLeft;
 
 	// executionNumber 가 클수록 최근에 API call 을 통해 받아온 데이터
 	// 실제 프로젝트에는 JobExecutionId로 대체할 부분
