@@ -12,7 +12,7 @@ public interface TrafficApiCallRepository extends JpaRepository<TrafficApiCall, 
 
 	@Query(
 			"select fac from TrafficApiCall fac "
-					+ " join fetch fac.traffic "
+					+ " join fac.traffic "
 					+ " where fac.executionNumber = :executionNumber")
 	List<TrafficApiCall> findByExecutionNumber(@Param("executionNumber") int executionNumber);
 }
