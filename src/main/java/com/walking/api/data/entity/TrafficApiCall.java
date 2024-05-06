@@ -12,15 +12,19 @@ import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
+import org.hibernate.annotations.BatchSize;
 
 /** 신호제어기 잔여시간 정보 서비스의 응답 결과 */
 @Entity
-@Data
+@Getter
+@ToString
 @Builder(toBuilder = true)
 @AllArgsConstructor
 @NoArgsConstructor
+@BatchSize(size = 1000)
 public class TrafficApiCall {
 
 	@Id
