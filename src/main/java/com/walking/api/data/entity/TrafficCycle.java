@@ -28,8 +28,8 @@ public class TrafficCycle {
 	private Traffic traffic;
 
 	@Column(nullable = false)
-	private Double redCycle;
+	private Float redCycle;
 
 	@Column(nullable = false)
-	private Double greenCycle;
+	private Float greenCycle;
 }
