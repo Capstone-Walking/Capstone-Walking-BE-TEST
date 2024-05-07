@@ -56,7 +56,7 @@ class TrafficCyclePredictServiceTest extends RepositoryTest {
 		}
 	}
 
-	@ParameterizedTest(name = "{0} 신호등은 예측할 수 없어 Optinal.empty()를 반환합니다")
+	@ParameterizedTest(name = "{0} 신호등은 예측할 수 없어 Optional.empty()를 반환합니다")
 	@ValueSource(longs = {3L})
 	void 사이클을_계산할_수_없는_신호등은_Optional_Empty를_반환합니다(long unpredictableTrafficId) {
 		List<Traffic> unpredictableTraffics =
