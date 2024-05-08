@@ -32,7 +32,7 @@ class TrafficCyclePredictServiceTest extends RepositoryTest {
 	private static final int BIAS = 1;
 
 	@ParameterizedTest(name = "{0} 신호등에 대해 {1} 간격으로 데이터를 조회하며 사이클을 계산할 수 있습니다")
-	@MethodSource("generateData")
+	@MethodSource("predictableTraffics")
 	void 신호등에_대한_사이클을_예측할_수_있습니다(List<Long> trafficIds, int interval) {
 		// given
 		List<Traffic> traffics = trafficRepository.findByIds(trafficIds);
@@ -56,21 +56,7 @@ class TrafficCyclePredictServiceTest extends RepositoryTest {
 		}
 	}
 
-	@ParameterizedTest(name = "{0} 신호등은 예측할 수 없어 Optional.empty()를 반환합니다")
-	@ValueSource(longs = {3L})
-	void 사이클을_계산할_수_없는_신호등은_Optional_Empty를_반환합니다(long unpredictableTrafficId) {
-		List<Traffic> unpredictableTraffics =
-				trafficRepository.findByIds(Arrays.asList(unpredictableTrafficId));
-		Map<Traffic, PredictData> result = trafficCyclePredictService.execute(unpredictableTraffics, 5);
-
-		for (Traffic unpredictableTraffic : result.keySet()) {
-			PredictData unpredictableData = result.get(unpredictableTraffic);
-			Assertions.assertThat(unpredictableData.getRedCycle()).isEqualTo(Optional.empty());
-			Assertions.assertThat(unpredictableData.getGreenCycle()).isEqualTo(Optional.empty());
-		}
-	}
-
-	static Stream<Arguments> generateData() {
+	static Stream<Arguments> predictableTraffics() {
 		int dataInterval = 5;
 
 		List<Long> trafficIds01 = Arrays.asList(1L, 2L, 4L, 5L);
@@ -83,5 +69,19 @@ class TrafficCyclePredictServiceTest extends RepositoryTest {
 				Arguments.of(trafficIds02, dataInterval - 3),
 				Arguments.of(trafficIds03, dataInterval + 3),
 				Arguments.of(trafficIds04, dataInterval));
+	}
+
+	@ParameterizedTest(name = "{0} 신호등은 예측할 수 없어 Optional.empty()를 반환합니다")
+	@ValueSource(longs = {3L})
+	void 사이클을_계산할_수_없는_신호등은_Optional_Empty를_반환합니다(long unpredictableTrafficId) {
+		List<Traffic> unpredictableTraffics =
+				trafficRepository.findByIds(Arrays.asList(unpredictableTrafficId));
+		Map<Traffic, PredictData> result = trafficCyclePredictService.execute(unpredictableTraffics, 5);
+
+		for (Traffic unpredictableTraffic : result.keySet()) {
+			PredictData unpredictableData = result.get(unpredictableTraffic);
+			Assertions.assertThat(unpredictableData.getRedCycle()).isEqualTo(Optional.empty());
+			Assertions.assertThat(unpredictableData.getGreenCycle()).isEqualTo(Optional.empty());
+		}
 	}
 }
