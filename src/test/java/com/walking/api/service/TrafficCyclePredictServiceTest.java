@@ -7,6 +7,7 @@ import com.walking.api.data.entity.TrafficCycle;
 import com.walking.api.repository.TrafficCycleRepository;
 import com.walking.api.repository.TrafficRepository;
 import com.walking.api.service.dto.PredictData;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -83,5 +84,48 @@ class TrafficCyclePredictServiceTest extends RepositoryTest {
 			Assertions.assertThat(unpredictableData.getRedCycle()).isEqualTo(Optional.empty());
 			Assertions.assertThat(unpredictableData.getGreenCycle()).isEqualTo(Optional.empty());
 		}
+	}
+
+	@ParameterizedTest(name = "{0}은 사이클을 예측하였고, {1}은 사이클 예측에 실패하였습니다.")
+	@MethodSource("mixedTraffics")
+	void 사이클을_계산할_수_없는_신호등과_계산가능한_신호등이_혼재_되어있어도_잘_계산합니다(
+			List<Long> predictableIds, List<Long> unpredictableIds, int interval) {
+		List<Long> trafficIds = new ArrayList<>();
+		trafficIds.addAll(predictableIds);
+		trafficIds.addAll(unpredictableIds);
+		List<Traffic> traffics = trafficRepository.findByIds(trafficIds);
+		Map<Traffic, PredictData> result = trafficCyclePredictService.execute(traffics, interval);
+
+		for (Traffic traffic : result.keySet()) {
+			PredictData predictData = result.get(traffic);
+			TrafficCycle trafficCycle = trafficCycleRepository.findByTraffic(traffic).orElseThrow();
+
+			// 예측이 불가능한 신호등인 경우
+			if (unpredictableIds.contains(traffic.getId())) {
+				Assertions.assertThat(predictData.getRedCycle()).isEqualTo(Optional.empty());
+				Assertions.assertThat(predictData.getGreenCycle()).isEqualTo(Optional.empty());
+
+				log.debug(
+						(traffic + "은 ===> " + predictData.getGreenCycle() + ", " + predictData.getRedCycle())
+								+ "일 것이다.");
+			} else { // 예측이 가능한 신호등인 경우
+				assertTrue(
+						predictData.getGreenCycle().get() < trafficCycle.getGreenCycle() + BIAS
+								&& predictData.getGreenCycle().get() > trafficCycle.getGreenCycle() - BIAS
+								&& predictData.getRedCycle().get() < trafficCycle.getRedCycle() + BIAS
+								&& predictData.getRedCycle().get() > trafficCycle.getRedCycle() - BIAS);
+
+				log.debug(
+						(traffic + "은 ===> " + predictData.getGreenCycle() + ", " + predictData.getRedCycle())
+								+ "일 것이다.");
+			}
+		}
+	}
+
+	static Stream<Arguments> mixedTraffics() {
+		List<Long> predictableIds = Arrays.asList(1L, 9L, 8L, 2L);
+		List<Long> unpredictableIds = Arrays.asList(3L);
+
+		return Stream.of(Arguments.of(predictableIds, unpredictableIds, 5));
 	}
 }
