@@ -3,14 +3,11 @@ package com.walking.api.service;
 import com.walking.api.data.entity.Traffic;
 import com.walking.api.data.entity.TrafficApiCall;
 import com.walking.api.repository.TrafficApiCallRepository;
-import com.walking.api.service.constants.Interval;
 import com.walking.api.service.dto.PredictData;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
+import com.walking.api.service.dto.PredictDatum;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -33,24 +30,25 @@ public class TrafficCyclePredictService {
 	 */
 	// todo: 예외 처리
 	@Transactional(readOnly = true)
-	public Map<Traffic, PredictData> execute(List<Traffic> traffics, int interval) {
+	public Map<Traffic, PredictDatum> execute(List<Traffic> traffics, int interval) {
 		int start = 0;
 		int end = start + interval;
 
 		// 예측 정보를 담고 반환될 변수(리턴값)
-		Map<Traffic, PredictData> result = new HashMap<>();
-		for (Traffic traffic : traffics) {
-			result.put(traffic, new PredictData(traffic));
-		}
+		Map<Traffic, PredictDatum> originData =
+				traffics.stream()
+						.map(PredictDatum::new)
+						.collect(Collectors.toMap(PredictDatum::getTraffic, predictDatum -> predictDatum));
 
 		// 예측이 끝나지 않은 신호등 리스트
-		List<Traffic> unpredictedList = getUnpredictedList(result);
+		PredictData predictData = PredictData.builder().predictData(originData).build();
 
-		while (!unpredictedList.isEmpty()) {
+		while (!predictData.isEmpty()) {
 			List<TrafficApiCall> recentlyData =
-					trafficApiCallRepository.getRecentlyData(unpredictedList, start, end);
+					trafficApiCallRepository.getRecentlyData(predictData.getTraffics(), start, end);
 
-			Map<Traffic, List<TrafficApiCall>> separatedData = separateByTraffic(recentlyData);
+			Map<Traffic, List<TrafficApiCall>> separatedData =
+					recentlyData.stream().collect(Collectors.groupingBy(TrafficApiCall::getTraffic));
 			logging(separatedData);
 
 			// 여기서 예측이 불가능한 신호등인지 구분되고 루프가 종료됩니다.
@@ -58,129 +56,27 @@ public class TrafficCyclePredictService {
 				break;
 			}
 
-			for (Traffic traffic : separatedData.keySet()) {
-				predict(separatedData.get(traffic), result.get(traffic));
-			}
+			separatedData.forEach(
+					(traffic, data) -> {
+						PredictDatum predictDatum = originData.get(traffic);
+						predictDatum
+								.predict(data)
+								.ifNotPredictedApplyAndLoad(
+										(pd) -> pd.isPredictedRedCycle(),
+										(pdp, d) -> pdp.predictRedCycle(d),
+										(pd, f) -> pd.loadRedCycle(f))
+								.ifNotPredictedApplyAndLoad(
+										(pd) -> pd.isPredictedGreenCycle(),
+										(pdp, d) -> pdp.predictGreenCycle(d),
+										(pd, f) -> pd.loadGreenCycle(f));
+					});
 
-			unpredictedList = getUnpredictedList(result);
+			predictData.refresh(originData);
 			start = end;
 			end += interval;
 		}
 
-		return result;
-	}
-
-	/**
-	 * 가져온 신호등 정보를 신호등을 기준으로 데이터를 분리합니다.
-	 *
-	 * @param recentlyData 데이터
-	 * @return 신호등을 key 로 갖는 Map
-	 */
-	private Map<Traffic, List<TrafficApiCall>> separateByTraffic(List<TrafficApiCall> recentlyData) {
-		Map<Traffic, List<TrafficApiCall>> separatedData = new HashMap<>();
-
-		for (TrafficApiCall recentlyDatum : recentlyData) {
-			List<TrafficApiCall> group =
-					separatedData.computeIfAbsent(recentlyDatum.getTraffic(), data -> new ArrayList<>());
-
-			group.add(recentlyDatum);
-		}
-
-		return separatedData;
-	}
-
-	/**
-	 * 예측을 수행한 결과를 읽어보고 예측이 아직 끝나지 않은 신호등 리스트를 반환합니다.
-	 *
-	 * @param result 예측을 수행한 결과
-	 * @return 신호등 리스트
-	 */
-	private List<Traffic> getUnpredictedList(Map<Traffic, PredictData> result) {
-		List<Traffic> unpredictedList = new ArrayList<>();
-		for (Traffic traffic : result.keySet()) {
-			if (!result.get(traffic).isComplete()) {
-				unpredictedList.add(traffic);
-			}
-		}
-
-		return unpredictedList;
-	}
-
-	/**
-	 * 최근 데이터와 예측하고 있는 정보를 가지고 신호등 사이클을 계산합니다.
-	 *
-	 * @param data 예측하고자 하는 신호등의 최근 데이터
-	 * @param predictData 예측된 정보
-	 * @return 인자로 전달 받은 predictData 에 예측 가능한 값을 채워 반환합니다.
-	 */
-	// R -> G, G -> R 따로 찾지말고 한 번 순회할 때 모두 찾아내면 좋겠다
-	private PredictData predict(List<TrafficApiCall> data, PredictData predictData) {
-		if (!predictData.isPredictedGreenCycle()) {
-			predictData.updateGreenCycle(getGreenCycle(data));
-		}
-		if (!predictData.isPredictedRedCycle()) {
-			predictData.updateRedCycle(getRedCycle(data));
-		}
-
-		return predictData;
-	}
-
-	// todo: getRedCycle 과 getGreenCycle 메서드 하나로 합치기
-
-	/**
-	 * 신호등의 빨간불에 대해서 사이클을 계산합니다.
-	 *
-	 * @param data 계산하고자 하는 신호등의 데이터 리스트
-	 * @return 빨간불의 사이클
-	 */
-	private static Optional<Float> getRedCycle(List<TrafficApiCall> data) {
-		Optional<Float> redCycle = Optional.empty();
-
-		Iterator<TrafficApiCall> iterator = data.iterator();
-		TrafficApiCall afterData = iterator.next();
-
-		while (iterator.hasNext()) {
-			TrafficApiCall before = iterator.next();
-			// G -> R 인 패턴을 찾는다.
-			if (before.getColor().isGreen() && afterData.getColor().isRed()) {
-				// 시간을 계산한다.
-				redCycle =
-						Optional.of(
-								afterData.getTimeLeft() + Interval.SCHEDULER_INTERVAL - before.getTimeLeft());
-				log.debug("패턴: " + before.getColor() + " -> " + afterData.getColor() + " 을 찾았습니다.");
-				break;
-			}
-			afterData = before;
-		}
-		return redCycle;
-	}
-
-	/**
-	 * 신호등의 초록불에 대해서 사이클을 계산합니다.
-	 *
-	 * @param data 계산하고자 하는 신호등의 데이터 리스트
-	 * @return 초록불의 사이클
-	 */
-	private static Optional<Float> getGreenCycle(List<TrafficApiCall> data) {
-		Optional<Float> greenCycle = Optional.empty();
-
-		Iterator<TrafficApiCall> iterator = data.iterator();
-		TrafficApiCall afterData = iterator.next();
-
-		while (iterator.hasNext()) {
-			TrafficApiCall before = iterator.next();
-			// R -> G 인 패턴을 찾는다.
-			if (before.getColor().isRed() && afterData.getColor().isGreen()) {
-				// 시간을 계산한다.
-				greenCycle =
-						Optional.of(
-								afterData.getTimeLeft() + Interval.SCHEDULER_INTERVAL - before.getTimeLeft());
-				log.debug("패턴: " + before.getColor() + " -> " + afterData.getColor() + " 을 찾았습니다.");
-				break;
-			}
-			afterData = before;
-		}
-		return greenCycle;
+		return originData;
 	}
 
 	/**
