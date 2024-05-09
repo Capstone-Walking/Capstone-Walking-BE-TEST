@@ -7,7 +7,7 @@ import com.walking.api.repository.TrafficApiCallRepository;
 import com.walking.api.repository.TrafficCycleRepository;
 import com.walking.api.service.dto.ColorAndTimeLeft;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,23 +32,12 @@ public class TrafficApiCallService {
 	 */
 	@Transactional(readOnly = true)
 	public List<TrafficApiCall> execute(int apiCallInterval, int executionNumber) {
-		TrafficApiCall[] recentlyData =
-				trafficApiCallRepository
-						.findByExecutionNumber(executionNumber - 1)
-						.toArray(new TrafficApiCall[] {});
-		TrafficCycle[] trafficCycles = trafficCycleRepository.findAll().toArray(new TrafficCycle[] {});
+		List<TrafficApiCall> recentlyData =
+				trafficApiCallRepository.findByExecutionNumber(executionNumber - 1);
+		recentlyData.sort(Comparator.comparingLong(t -> t.getTraffic().getId()));
 
-		// 쉬운 비교를 위해 두 데이터를 신호등 아이디로 정렬
-		Arrays.sort(
-				recentlyData,
-				(t1, t2) -> {
-					return Long.compare(t1.getTraffic().getId(), t2.getTraffic().getId());
-				});
-		Arrays.sort(
-				trafficCycles,
-				(t1, t2) -> {
-					return Long.compare(t1.getTraffic().getId(), t2.getTraffic().getId());
-				});
+		List<TrafficCycle> trafficCycles = trafficCycleRepository.findAll();
+		trafficCycles.sort(Comparator.comparingLong(t -> t.getTraffic().getId()));
 
 		List<TrafficApiCall> nextApiCallData =
 				generateNextApiCallData(apiCallInterval, executionNumber, recentlyData, trafficCycles);
@@ -67,20 +56,20 @@ public class TrafficApiCallService {
 	private List<TrafficApiCall> generateNextApiCallData(
 			int apiCallInterval,
 			int executionNumber,
-			TrafficApiCall[] recentlyData,
-			TrafficCycle[] trafficCycles) {
+			List<TrafficApiCall> recentlyData,
+			List<TrafficCycle> trafficCycles) {
 
 		List<TrafficApiCall> nextApiCallData = new ArrayList<>();
 		ColorAndTimeLeft nextColorAndTimeLeft;
 
-		for (int i = 0; i < recentlyData.length; i++) {
-			validateSameData(recentlyData[i], trafficCycles[i]);
+		for (int i = 0; i < recentlyData.size(); i++) {
+			validateSameData(recentlyData.get(i), trafficCycles.get(i));
 
 			nextColorAndTimeLeft =
-					generateNextColorAndTimeLeft(apiCallInterval, recentlyData[i], trafficCycles[i]);
+					generateNextColorAndTimeLeft(apiCallInterval, recentlyData.get(i), trafficCycles.get(i));
 			TrafficApiCall callData =
 					TrafficApiCall.builder()
-							.traffic(recentlyData[i].getTraffic())
+							.traffic(recentlyData.get(i).getTraffic())
 							.color(nextColorAndTimeLeft.getTrafficColor())
 							.timeLeft(nextColorAndTimeLeft.getTimeLeft())
 							.executionNumber(executionNumber)
