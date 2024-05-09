@@ -23,7 +23,7 @@ class TrafficApiCallServiceTest {
 	@Rollback(false)
 	@Transactional
 	@ParameterizedTest
-	@ValueSource(ints = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20})
+	@ValueSource(ints = {2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20})
 	void 신호_색상과_잔여시간_데이터를_생성한다(int number) {
 		executionNumber =
 				number; // traffic_api_call 테이블에 존재하는 마지막 execution_number 의 + 1된 값으로 실행시켜야합니다.
