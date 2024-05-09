@@ -2,6 +2,7 @@ package com.walking.api.service;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.walking.api.ApiApp;
 import com.walking.api.data.entity.Traffic;
 import com.walking.api.data.entity.TrafficCycle;
 import com.walking.api.repository.TrafficCycleRepository;
@@ -20,11 +21,15 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 
 @Slf4j
-@ContextConfiguration(classes = {TrafficRepository.class, TrafficCyclePredictService.class})
-class TrafficCyclePredictServiceTest extends RepositoryTest {
+@ActiveProfiles(value = "test")
+@SpringBootTest
+@ContextConfiguration(classes = {ApiApp.class})
+class TrafficCyclePredictServiceTest {
 
 	@Autowired TrafficRepository trafficRepository;
 	@Autowired TrafficCycleRepository trafficCycleRepository;
