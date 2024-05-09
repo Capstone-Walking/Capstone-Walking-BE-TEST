@@ -6,6 +6,39 @@
 1. ```src/main/resources/data``` 에 위치한 파일을 ```/var/lib/mysql-files``` 경로에 저장합니다.
 2. 아래 스크립트를 실행합니다.
 ```
+# 테이블을 생성합니다.
+create table traffic (
+   id bigint not null,
+    primary key (id)
+) engine=InnoDB;
+
+create table traffic_api_call (
+   id bigint not null auto_increment,
+    color varchar(255) not null,
+    execution_number integer not null,
+    time_left float not null,
+    traffic_id bigint,
+    primary key (id)
+) engine=InnoDB;
+
+create table traffic_cycle (
+   id bigint not null auto_increment,
+    green_cycle float not null,
+    red_cycle float not null,
+    traffic_id bigint,
+    primary key (id)
+) engine=InnoDB;
+
+alter table traffic_api_call
+   add constraint traffic_api_call_traffic_id_fk
+   foreign key (traffic_id)
+   references traffic (id);
+
+alter table traffic_cycle
+   add constraint traffic_cycle_traffic_id_fk
+   foreign key (traffic_id)
+   references traffic (id);
+
 #신호등 데이터 생성
 LOAD DATA INFILE '/var/lib/mysql-files/traffic.csv'
 IGNORE
