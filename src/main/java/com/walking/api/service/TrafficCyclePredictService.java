@@ -14,6 +14,7 @@ import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /** 데이터베이스에 기록된 잔여시간 및 상태 정보를 바탕으로 신호 사이클을 예측합니다. */
 @Service
@@ -31,6 +32,7 @@ public class TrafficCyclePredictService {
 	 * @param interval 예측을 위해 가져올 데이터의 크기
 	 */
 	// todo: 예외 처리
+	@Transactional(readOnly = true)
 	public Map<Traffic, PredictData> execute(List<Traffic> traffics, int interval) {
 		int start = 0;
 		int end = start + interval;

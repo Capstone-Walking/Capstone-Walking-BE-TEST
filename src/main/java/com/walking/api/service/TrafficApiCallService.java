@@ -12,6 +12,7 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /** 신호 시간 및 색상 정보를 받아온 척 데이터를 만들어 냅니다. (api 요청을 1회 보낸 것과 동일) */
 @Service
@@ -29,6 +30,7 @@ public class TrafficApiCallService {
 	 * @param executionNumber JobExecution 을 나타내는 변수, 몇 번째로 생성된 데이터 인지를 나타냅니다
 	 * @return
 	 */
+	@Transactional(readOnly = true)
 	public List<TrafficApiCall> execute(int apiCallInterval, int executionNumber) {
 		TrafficApiCall[] recentlyData =
 				trafficApiCallRepository
