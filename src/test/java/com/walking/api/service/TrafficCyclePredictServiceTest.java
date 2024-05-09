@@ -7,7 +7,7 @@ import com.walking.api.data.entity.Traffic;
 import com.walking.api.data.entity.TrafficCycle;
 import com.walking.api.repository.TrafficCycleRepository;
 import com.walking.api.repository.TrafficRepository;
-import com.walking.api.service.dto.PredictData;
+import com.walking.api.service.dto.PredictDatum;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -43,21 +43,21 @@ class TrafficCyclePredictServiceTest {
 		// given
 		List<Traffic> traffics = trafficRepository.findByIds(trafficIds);
 
-		Map<Traffic, PredictData> result = trafficCyclePredictService.execute(traffics, interval);
+		Map<Traffic, PredictDatum> result = trafficCyclePredictService.execute(traffics, interval);
 
 		for (Traffic traffic : result.keySet()) {
-			PredictData predictData = result.get(traffic);
+			PredictDatum predictDatum = result.get(traffic);
 			TrafficCycle trafficCycle = trafficCycleRepository.findByTraffic(traffic).orElseThrow();
 
 			// 계산된 사이클과 실제 사이클을 비교
 			assertTrue(
-					predictData.getGreenCycle().get() < trafficCycle.getGreenCycle() + BIAS
-							&& predictData.getGreenCycle().get() > trafficCycle.getGreenCycle() - BIAS
-							&& predictData.getRedCycle().get() < trafficCycle.getRedCycle() + BIAS
-							&& predictData.getRedCycle().get() > trafficCycle.getRedCycle() - BIAS);
+					predictDatum.getGreenCycle().get() < trafficCycle.getGreenCycle() + BIAS
+							&& predictDatum.getGreenCycle().get() > trafficCycle.getGreenCycle() - BIAS
+							&& predictDatum.getRedCycle().get() < trafficCycle.getRedCycle() + BIAS
+							&& predictDatum.getRedCycle().get() > trafficCycle.getRedCycle() - BIAS);
 
 			log.debug(
-					(traffic + "은 ===> " + predictData.getGreenCycle() + ", " + predictData.getRedCycle())
+					(traffic + "은 ===> " + predictDatum.getGreenCycle() + ", " + predictDatum.getRedCycle())
 							+ "일 것이다.");
 		}
 	}
@@ -82,10 +82,11 @@ class TrafficCyclePredictServiceTest {
 	void 사이클을_계산할_수_없는_신호등은_Optional_Empty를_반환합니다(long unpredictableTrafficId) {
 		List<Traffic> unpredictableTraffics =
 				trafficRepository.findByIds(Arrays.asList(unpredictableTrafficId));
-		Map<Traffic, PredictData> result = trafficCyclePredictService.execute(unpredictableTraffics, 5);
+		Map<Traffic, PredictDatum> result =
+				trafficCyclePredictService.execute(unpredictableTraffics, 5);
 
 		for (Traffic unpredictableTraffic : result.keySet()) {
-			PredictData unpredictableData = result.get(unpredictableTraffic);
+			PredictDatum unpredictableData = result.get(unpredictableTraffic);
 			Assertions.assertThat(unpredictableData.getRedCycle()).isEqualTo(Optional.empty());
 			Assertions.assertThat(unpredictableData.getGreenCycle()).isEqualTo(Optional.empty());
 		}
@@ -99,29 +100,29 @@ class TrafficCyclePredictServiceTest {
 		trafficIds.addAll(predictableIds);
 		trafficIds.addAll(unpredictableIds);
 		List<Traffic> traffics = trafficRepository.findByIds(trafficIds);
-		Map<Traffic, PredictData> result = trafficCyclePredictService.execute(traffics, interval);
+		Map<Traffic, PredictDatum> result = trafficCyclePredictService.execute(traffics, interval);
 
 		for (Traffic traffic : result.keySet()) {
-			PredictData predictData = result.get(traffic);
+			PredictDatum predictDatum = result.get(traffic);
 			TrafficCycle trafficCycle = trafficCycleRepository.findByTraffic(traffic).orElseThrow();
 
 			// 예측이 불가능한 신호등인 경우
 			if (unpredictableIds.contains(traffic.getId())) {
-				Assertions.assertThat(predictData.getRedCycle()).isEqualTo(Optional.empty());
-				Assertions.assertThat(predictData.getGreenCycle()).isEqualTo(Optional.empty());
+				Assertions.assertThat(predictDatum.getRedCycle()).isEqualTo(Optional.empty());
+				Assertions.assertThat(predictDatum.getGreenCycle()).isEqualTo(Optional.empty());
 
 				log.debug(
-						(traffic + "은 ===> " + predictData.getGreenCycle() + ", " + predictData.getRedCycle())
+						(traffic + "은 ===> " + predictDatum.getGreenCycle() + ", " + predictDatum.getRedCycle())
 								+ "일 것이다.");
 			} else { // 예측이 가능한 신호등인 경우
 				assertTrue(
-						predictData.getGreenCycle().get() < trafficCycle.getGreenCycle() + BIAS
-								&& predictData.getGreenCycle().get() > trafficCycle.getGreenCycle() - BIAS
-								&& predictData.getRedCycle().get() < trafficCycle.getRedCycle() + BIAS
-								&& predictData.getRedCycle().get() > trafficCycle.getRedCycle() - BIAS);
+						predictDatum.getGreenCycle().get() < trafficCycle.getGreenCycle() + BIAS
+								&& predictDatum.getGreenCycle().get() > trafficCycle.getGreenCycle() - BIAS
+								&& predictDatum.getRedCycle().get() < trafficCycle.getRedCycle() + BIAS
+								&& predictDatum.getRedCycle().get() > trafficCycle.getRedCycle() - BIAS);
 
 				log.debug(
-						(traffic + "은 ===> " + predictData.getGreenCycle() + ", " + predictData.getRedCycle())
+						(traffic + "은 ===> " + predictDatum.getGreenCycle() + ", " + predictDatum.getRedCycle())
 								+ "일 것이다.");
 			}
 		}
