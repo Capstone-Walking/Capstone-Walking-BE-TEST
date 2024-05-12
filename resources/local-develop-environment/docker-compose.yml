@@ -12,6 +12,7 @@ services:
       - "13306:3306"
     volumes:
       - ./mysql-init.d:/docker-entrypoint-initdb.d
+      - ./data:/var/lib/mysql-files
 
   walking-adminer: # mysql web admin
     container_name: walking-adminer
