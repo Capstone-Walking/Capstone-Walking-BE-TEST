@@ -1,11 +1,8 @@
 package com.walking.api.service.dto;
 
 import com.walking.api.data.entity.Traffic;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -15,15 +12,14 @@ import lombok.ToString;
 @Getter
 @ToString
 @EqualsAndHashCode
-@AllArgsConstructor
 @NoArgsConstructor
 public class PredictData {
 
 	private List<PredictDatum> predictData;
 
 	@Builder
-	public PredictData(Map<Traffic, PredictDatum> predictData) {
-		this.predictData = new ArrayList<>(predictData.values());
+	public PredictData(List<PredictDatum> predictData) {
+		this.predictData = predictData;
 	}
 
 	/**
@@ -32,7 +28,7 @@ public class PredictData {
 	 * @param prePredictData 예측을 수행한 결과
 	 * @return 신호등 리스트
 	 */
-	public PredictData refresh(Map<Traffic, PredictDatum> prePredictData) {
+	public PredictData refresh(List<PredictDatum> prePredictData) {
 		return PredictData.builder().predictData(prePredictData).build();
 	}
 
