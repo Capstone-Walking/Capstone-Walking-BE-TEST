@@ -57,7 +57,7 @@ public class PredictDatumPredictor {
 	 */
 	@Nullable
 	public Float predictRedCycle(List<TrafficApiCall> data) {
-		Optional<Float> optionalPredict = doPredict(data, idGreenPredicate(), idRedPredicate());
+		Optional<Float> optionalPredict = doPredict(data, isGreenPredicate(), isRedPredicate());
 		return optionalPredict.orElse(null);
 	}
 
@@ -69,15 +69,15 @@ public class PredictDatumPredictor {
 	 */
 	@Nullable
 	public Float predictGreenCycle(List<TrafficApiCall> data) {
-		Optional<Float> optionalPredict = doPredict(data, idRedPredicate(), idGreenPredicate());
+		Optional<Float> optionalPredict = doPredict(data, isRedPredicate(), isGreenPredicate());
 		return optionalPredict.orElse(null);
 	}
 
-	private Predicate<TrafficApiCall> idRedPredicate() {
+	private Predicate<TrafficApiCall> isRedPredicate() {
 		return (TrafficApiCall tac) -> tac.getColor().isRed();
 	}
 
-	private Predicate<TrafficApiCall> idGreenPredicate() {
+	private Predicate<TrafficApiCall> isGreenPredicate() {
 		return (TrafficApiCall tac) -> tac.getColor().isGreen();
 	}
 
