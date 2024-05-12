@@ -1,7 +1,6 @@
 package com.walking.api.service.dto;
 
 import com.walking.api.data.entity.TrafficApiCall;
-import com.walking.api.service.constants.Interval;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
@@ -16,10 +15,12 @@ public class PredictDatumPredictor {
 
 	private final PredictDatum predictDatum;
 	private final List<TrafficApiCall> data;
+	private final int interval;
 
-	public PredictDatumPredictor(PredictDatum predictDatum, List<TrafficApiCall> data) {
+	public PredictDatumPredictor(PredictDatum predictDatum, List<TrafficApiCall> data, int interval) {
 		this.predictDatum = predictDatum;
 		this.data = data;
+		this.interval = interval;
 	}
 
 	/**
@@ -62,6 +63,17 @@ public class PredictDatumPredictor {
 	}
 
 	/**
+	 * 내부 데이터를 이용하여 빨간불의 사이클을 예측합니다.<br>
+	 * 만약 예측이 성공하면 predictData 에 값을 채워넣습니다.
+	 *
+	 * @return 예측한 사이클을 반환합니다.
+	 */
+	@Nullable
+	public Float predictRedCycle() {
+		return predictRedCycle(this.data);
+	}
+
+	/**
 	 * 초록불의 사이클을 예측합니다.
 	 *
 	 * @param data 예측하고자 하는 신호등의 최근 데이터
@@ -71,6 +83,17 @@ public class PredictDatumPredictor {
 	public Float predictGreenCycle(List<TrafficApiCall> data) {
 		Optional<Float> optionalPredict = doPredict(data, isRedPredicate(), isGreenPredicate());
 		return optionalPredict.orElse(null);
+	}
+
+	/**
+	 * 내부 데이터를 이용하여 초록불의 사이클을 예측합니다.<br>
+	 * 만약 예측이 성공하면 predictDatum 에 값을 채워넣습니다.
+	 *
+	 * @return 예측한 사이클을 반환합니다.
+	 */
+	@Nullable
+	public Float predictGreenCycle() {
+		return predictGreenCycle(this.data);
 	}
 
 	private Predicate<TrafficApiCall> isRedPredicate() {
@@ -88,23 +111,27 @@ public class PredictDatumPredictor {
 		Optional<Float> optionalCycle = Optional.empty();
 
 		Iterator<TrafficApiCall> iterator = data.iterator();
-		TrafficApiCall afterData = iterator.next();
+		TrafficApiCall beforeData = iterator.next();
 
 		while (iterator.hasNext()) {
-			TrafficApiCall before = iterator.next();
-			if (beforeColorPredict.test(before) && afterColorPredict.test(afterData)) {
+			TrafficApiCall afterData = iterator.next();
+			if (beforeColorPredict.test(beforeData) && afterColorPredict.test(afterData)) {
 				// 시간을 계산한다.
-				optionalCycle = calculateCycle(afterData, before);
-				log.debug("패턴: " + before.getColor() + " -> " + afterData.getColor() + " 을 찾았습니다.");
+				Float calculatedCycle = calculateCycle(afterData, beforeData);
+				if (calculatedCycle < 0) {
+					throw new IllegalArgumentException("예측이 불가능한 데이터입니다.");
+				} else {
+					optionalCycle = Optional.of(calculatedCycle);
+					log.debug("패턴: " + beforeData.getColor() + " -> " + afterData.getColor() + " 을 찾았습니다.");
+				}
 				break;
 			}
-			afterData = before;
+			beforeData = afterData;
 		}
 		return optionalCycle;
 	}
 
-	private Optional<Float> calculateCycle(TrafficApiCall afterData, TrafficApiCall before) {
-		return Optional.of(
-				afterData.getTimeLeft() + Interval.SCHEDULER_INTERVAL - before.getTimeLeft());
+	private Float calculateCycle(TrafficApiCall afterData, TrafficApiCall before) {
+		return afterData.getTimeLeft() + this.interval - before.getTimeLeft();
 	}
 }
