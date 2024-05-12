@@ -23,13 +23,25 @@ public class PredictData {
 	}
 
 	/**
-	 * 예측을 수행한 결과를 읽어보고 예측이 아직 끝나지 않은 신호등 리스트를 반환합니다.
+	 * 예측이 끝나지 않은 신호등 리스트를 반환합니다.
 	 *
-	 * @param prePredictData 예측을 수행한 결과
 	 * @return 신호등 리스트
 	 */
-	public PredictData refresh(List<PredictDatum> prePredictData) {
-		return PredictData.builder().predictData(prePredictData).build();
+	public PredictData refresh() {
+		return refresh(predictData);
+	}
+
+	/**
+	 * 예측을 수행한 결과를 읽어보고 예측이 아직 끝나지 않은 신호등 리스트를 반환합니다.
+	 *
+	 * @return 신호등 리스트
+	 */
+	protected PredictData refresh(List<PredictDatum> nonCompletePredictData) {
+		this.predictData =
+				nonCompletePredictData.stream()
+						.filter(predictDatum -> !predictDatum.isComplete())
+						.collect(Collectors.toList());
+		return this;
 	}
 
 	public boolean isEmpty() {
