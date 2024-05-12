@@ -89,7 +89,7 @@ public class PredictDatum {
 	 * @param data 예측하고자 하는 신호등의 최근 데이터
 	 * @return PredictDataPredictor 객체를 반환합니다.
 	 */
-	public PredictDatumPredictor predict(List<TrafficApiCall> data) {
-		return new PredictDatumPredictor(this, data);
+	public PredictDatumPredictor predict(List<TrafficApiCall> data, int interval) {
+		return new PredictDatumPredictor(this, data, interval);
 	}
 }

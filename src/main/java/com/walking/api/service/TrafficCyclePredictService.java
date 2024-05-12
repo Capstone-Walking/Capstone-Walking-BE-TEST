@@ -60,7 +60,7 @@ public class TrafficCyclePredictService {
 					(traffic, data) -> {
 						PredictDatum predictDatum = predictData.getPredictDatum(traffic);
 						predictDatum
-								.predict(data)
+								.predict(data, interval)
 								.ifNotPredictedApplyAndLoad(
 										(pd) -> pd.isPredictedRedCycle(),
 										(pdp, d) -> pdp.predictRedCycle(d),
