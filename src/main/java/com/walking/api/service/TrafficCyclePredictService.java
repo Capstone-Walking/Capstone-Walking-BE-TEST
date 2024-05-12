@@ -35,10 +35,10 @@ public class TrafficCyclePredictService {
 		int end = start + interval;
 
 		// 예측 정보를 담고 반환될 변수(리턴값)
-		Map<Traffic, PredictDatum> originData =
-				traffics.stream()
-						.map(PredictDatum::new)
-						.collect(Collectors.toMap(PredictDatum::getTraffic, predictDatum -> predictDatum));
+		List<PredictDatum> originData =
+				traffics.stream().map(PredictDatum::new).collect(Collectors.toList());
+
+		PredictData originPredictData = PredictData.builder().predictData(originData).build();
 
 		// 예측이 끝나지 않은 신호등 리스트
 		PredictData predictData = PredictData.builder().predictData(originData).build();
@@ -58,7 +58,7 @@ public class TrafficCyclePredictService {
 
 			separatedData.forEach(
 					(traffic, data) -> {
-						PredictDatum predictDatum = originData.get(traffic);
+						PredictDatum predictDatum = originPredictData.getPredictDatum(traffic);
 						predictDatum
 								.predict(data)
 								.ifNotPredictedApplyAndLoad(
@@ -76,7 +76,8 @@ public class TrafficCyclePredictService {
 			end += interval;
 		}
 
-		return originData;
+		return predictData.getPredictData().stream()
+				.collect(Collectors.toMap(PredictDatum::getTraffic, pd -> pd));
 	}
 
 	/**
