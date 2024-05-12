@@ -39,4 +39,11 @@ public class PredictData {
 	public List<Traffic> getTraffics() {
 		return predictData.stream().map(PredictDatum::getTraffic).collect(Collectors.toList());
 	}
+
+	public PredictDatum getPredictDatum(Traffic traffic) {
+		return predictData.stream()
+				.filter(predictDatum -> predictDatum.getTraffic().equals(traffic))
+				.findFirst()
+				.orElseThrow(() -> new IllegalArgumentException("해당 신호등이 존재하지 않습니다."));
+	}
 }
