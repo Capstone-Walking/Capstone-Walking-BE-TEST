@@ -38,8 +38,6 @@ public class TrafficCyclePredictService {
 		List<PredictDatum> originData =
 				traffics.stream().map(PredictDatum::new).collect(Collectors.toList());
 
-		PredictData originPredictData = PredictData.builder().predictData(originData).build();
-
 		// 예측이 끝나지 않은 신호등 리스트
 		PredictData predictData = PredictData.builder().predictData(originData).build();
 
@@ -58,7 +56,7 @@ public class TrafficCyclePredictService {
 
 			separatedData.forEach(
 					(traffic, data) -> {
-						PredictDatum predictDatum = originPredictData.getPredictDatum(traffic);
+						PredictDatum predictDatum = predictData.getPredictDatum(traffic);
 						predictDatum
 								.predict(data)
 								.ifNotPredictedApplyAndLoad(
@@ -71,7 +69,7 @@ public class TrafficCyclePredictService {
 										(pd, f) -> pd.loadGreenCycle(f));
 					});
 
-			predictData.refresh(originData);
+			predictData.refresh();
 			start = end;
 			end += interval;
 		}
