@@ -44,6 +44,10 @@ public class PredictData {
 		return this;
 	}
 
+	public List<PredictDatum> getCompletePredictData() {
+		return predictData.stream().filter(PredictDatum::isComplete).collect(Collectors.toList());
+	}
+
 	public boolean isEmpty() {
 		return predictData.isEmpty();
 	}

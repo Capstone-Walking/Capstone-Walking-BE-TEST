@@ -5,6 +5,7 @@ import com.walking.api.data.entity.TrafficApiCall;
 import com.walking.api.repository.TrafficApiCallRepository;
 import com.walking.api.service.dto.PredictData;
 import com.walking.api.service.dto.PredictDatum;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -41,6 +42,7 @@ public class TrafficCyclePredictService {
 		// 예측이 끝나지 않은 신호등 리스트
 		PredictData predictData = PredictData.builder().predictData(originData).build();
 
+		Map<Traffic, PredictDatum> predictedTraffics = new HashMap<>();
 		while (!predictData.isEmpty()) {
 			List<TrafficApiCall> recentlyData =
 					trafficApiCallRepository.getRecentlyData(predictData.getTraffics(), start, end);
@@ -69,13 +71,17 @@ public class TrafficCyclePredictService {
 										(pd, f) -> pd.loadGreenCycle(f));
 					});
 
+			List<PredictDatum> completePredictData = predictData.getCompletePredictData();
+			predictedTraffics.putAll(
+					completePredictData.stream()
+							.collect(Collectors.toMap(PredictDatum::getTraffic, pd -> pd)));
+
 			predictData.refresh();
 			start = end;
 			end += interval;
 		}
 
-		return predictData.getPredictData().stream()
-				.collect(Collectors.toMap(PredictDatum::getTraffic, pd -> pd));
+		return predictedTraffics;
 	}
 
 	/**
